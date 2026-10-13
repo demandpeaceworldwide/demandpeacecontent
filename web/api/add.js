@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
     const r = await query(
       `INSERT INTO items (source, ext_id, url, title, channel, thumb, headline)
        VALUES ('youtube',$1,$2,$3,$4,$5,$6) ON CONFLICT (source, ext_id) DO NOTHING RETURNING id`,
-      [vid, `https://www.youtube.com/watch?v=${vid}`, title, o.author_name || '',
+      [vid, url.includes('/shorts/') ? `https://www.youtube.com/shorts/${vid}` : `https://www.youtube.com/watch?v=${vid}`, title, o.author_name || '',
         `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`, cleanTitle(title)]);
     return json(res, 200, { ok: true, result: r.length ? 'added' : 'already in the queue' });
   }

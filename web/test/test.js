@@ -199,6 +199,20 @@ const assert = require('assert');
   assert.equal((await call('direction', {})).code, 403); ok('project preferences require private link');
   r = await call('direction', { method: 'POST', query: K, body: { version: loadedDirection.version, topics: 'x'.repeat(2001) } });
   assert.equal(r.code, 400); ok('oversized direction fields rejected');
+  // Shorts retain their format and take priority without changing client decisions.
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: true, json: async () => ({ title: 'A Short', author_name: 'Trusted source' }) });
+  try {
+    r = await call('add', { method: 'POST', query: K, body: { url: 'https://www.youtube.com/shorts/SSSSSSSSSSS?si=tracking' } });
+    assert.equal(r.json.result, 'added');
+    const picks = (await call('next', { query: K })).json.items;
+    assert.equal(picks[0].ext_id, 'SSSSSSSSSSS');
+    assert.equal(picks[0].url, 'https://www.youtube.com/shorts/SSSSSSSSSSS');
+    ok('Shorts links retain vertical format, discard tracking, and lead the queue');
+    r = await call('add', { method: 'POST', query: K, body: { url: 'https://youtu.be/SSSSSSSSSSS' } });
+    assert.equal(r.json.result, 'already in the queue');
+    ok('Shorts and watch links deduplicate to the same video');
+  } finally { globalThis.fetch = originalFetch; }
   console.log(`\nall ${n} checks passed`);
   await pg.close();
 })().catch((e) => { console.error('FAILED:', e.message); process.exit(1); });

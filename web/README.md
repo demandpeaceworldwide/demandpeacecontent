@@ -33,7 +33,7 @@ test/devserver.js   local stand-in for Vercel, no accounts:  node test/devserver
 ## Before going live
 
 - **Vercel plan:** the free Hobby tier is for non-commercial use as I understand its terms. This is paid client work: check the current terms, and get Noah's OK on Pro (about $20/mo) or pick a free commercial-friendly host.
-- The `?k=` link is a shared secret, not a login. Anyone with the link can approve posts. Send it only to Noah; rotate `DP_KEY` if it leaks. The pages send `noindex` and no-referrer headers.
+- The `?k=` link is a shared secret, not a login. Anyone with the link can approve posts. Send it only to Noah; rotate `DP_KEY` if it leaks. The pages send `noindex` and `strict-origin` referrer headers. Only the origin is sent, never the private key or page path.
 
 ## Client review workflow (October 12, 2026)
 
@@ -81,3 +81,11 @@ For this client project, Vercel must use Root Directory `web` and Output Directo
 Production requires `DATABASE_URL`, a private `DP_KEY`, and a separate `DP_WORKER_KEY`. The review link includes `?k=<DP_KEY>`; never commit its real value. No running Mac worker, Drive video uploads, or Instagram account linking is required for idea review.
 
 53 API checks cover both review-only mode and the future production workflow. Mobile Chrome verified saved direction/notes, keep/undo, private-link errors, and the absence of production tabs. Live database/phone verification must also pass before client handoff.
+
+## Shorts-first review update (October 12, 2026)
+
+The client sees the headline, source date, embedded video, and Keep/Skip before optional edits. Notes, hook, and start-time suggestions are collapsed; link intake and project direction are also collapsed to keep the first task focused. Shorts URLs are retained, displayed vertically, and sorted before longer source videos. Existing archive items and saved client decisions remain intact.
+
+YouTube Error 153 was caused by the previous `no-referrer` policy. Both the hosting header and HTML meta now use `strict-origin`, and the YouTube iframe explicitly uses the same policy. This identifies the embedding site without exposing the review key, even for same-origin referrers. The player includes the site's origin and inline playback support. Open original remains available for videos whose owners disable embedding or browsers that block playback.
+
+Verification: 55 API/database checks, plus mobile Chrome checks for origin-only iframe referrers, collapsed optional edits, no horizontal overflow, autosaved notes, keep/skip, and undo.

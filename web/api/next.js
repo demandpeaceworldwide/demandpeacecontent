@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
   // Operator error notes stay out of the client response.
   const items = await query(`SELECT id, source, ext_id, url, title, channel, published, thumb,
     status, headline, start_sec, direction_note, version, video_url, caption, client_feedback, added_at, decided_at, updated_at
-    FROM items WHERE status = ANY($1::text[]) ORDER BY COALESCE(published,'') DESC, id DESC LIMIT 20 OFFSET $2`, [GROUPS[view], offset]);
+    FROM items WHERE status = ANY($1::text[]) ORDER BY CASE WHEN url LIKE 'https://www.youtube.com/shorts/%' THEN 0 ELSE 1 END, COALESCE(published,'') DESC, id DESC LIMIT 20 OFFSET $2`, [GROUPS[view], offset]);
   const clientItems = items.map(item => {
     if (!item.video_url) return item;
     try {
