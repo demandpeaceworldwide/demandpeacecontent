@@ -9,15 +9,15 @@ api/decide.js       POST approve / skip, edit headline/start (needs ?k=)
 api/add.js          POST add a YouTube or X link             (needs ?k=)
 api/worker.js       worker endpoints for the Mac scripts     (needs header x-worker-key)
 lib/                db (Neon), helpers
-test/test.js        43 checks against in-memory Postgres:  npm test
+test/test.js        53 checks against in-memory Postgres:  npm test
 test/devserver.js   local stand-in for Vercel, no accounts:  node test/devserver.js
 ```
 
-## Tested (2026-10-11)
+## Verification (2026-10-12)
 
-- `npm test`: all 43 checks pass (auth, ingest, idempotence, approve/skip, X never downloads, worker flow).
+- `npm test`: all 53 checks pass (auth, ingest, idempotence, approve/skip, X never downloads, worker flow).
 - Local dev server + the Python worker end to end: `fetch.py` ingested 8 items, the page API served them, an approval reached `produce.py`.
-- **Not tested:** a real Vercel deploy and a real Neon database (no accounts yet), and the YouTube oEmbed title lookup in `add.js` (network).
+- **Live review flow verified:** client production domain serves the app; Neon saves decisions, idea notes, and project direction; mobile Chrome verified keep/skip, undo, drafts, duplicate link intake, and invalid-key rejection. Actual video rendering and private Drive playback remain outside this launch.
 
 ## Deploy (after the accounts exist; the assistant cannot create them)
 
