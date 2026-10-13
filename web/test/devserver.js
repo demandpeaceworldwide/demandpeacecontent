@@ -27,4 +27,4 @@ http.createServer(async (req, res) => {
   }
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.end(fs.readFileSync(path.join(root, 'public', 'index.html')));
-}).listen(8788, () => console.log('dev server on http://127.0.0.1:8788/?k=' + process.env.DP_KEY));
+}).listen(Number(process.env.DP_PORT || 8788), () => console.log('dev server on http://127.0.0.1:' + (process.env.DP_PORT || 8788) + '/?k=' + process.env.DP_KEY));

@@ -10,7 +10,7 @@ const assert = require('assert');
 
   const handlers = {
     next: require('../api/next'), decide: require('../api/decide'),
-    add: require('../api/add'), worker: require('../api/worker'),
+    add: require('../api/add'), worker: require('../api/worker'), edit: require('../api/edit'),
   };
 
   async function call(name, { method = 'GET', query = {}, body, headers = {} } = {}) {
@@ -77,6 +77,8 @@ const assert = require('assert');
   assert.equal(r.json.items[0].headline, 'Edited headline'); assert.equal(r.json.items[0].start_sec, 12); ok('worker sees the approved item with edits');
   r = await call('worker', { query: { action: 'manual' }, headers: W });
   assert.equal(r.json.items.length, 1); ok('worker sees the X item to source by hand');
+  r = await call('worker', { method: 'POST', headers: W, body: { action: 'claim', id: yt.id } });
+  assert.equal(r.code, 200); ok('worker claims before rendering');
   r = await call('worker', { method: 'POST', headers: W, body: { action: 'mark', id: yt.id, status: 'rendered' } });
   assert.ok(r.json.ok);
   r = await call('worker', { query: { action: 'approved' }, headers: W });
@@ -84,5 +86,68 @@ const assert = require('assert');
   r = await call('next', { query: K });
   assert.equal(r.json.approved, 1); assert.equal(r.json.left, 1); ok('counts add up');
 
+  // Draft persistence and optimistic concurrency.
+  const fresh = (await call('next', { query: K })).json.items[0];
+  r = await call('edit', { method: 'POST', query: K, body: { action: 'draft', id: fresh.id, version: fresh.version, headline: 'Saved draft', start: 90 } });
+  assert.equal(r.code, 200);
+  let version = r.json.version;
+  const saved = (await call('next', { query: K })).json.items[0];
+  assert.equal(saved.headline, 'Saved draft'); assert.equal(saved.start_sec, 90); ok('draft survives a feed reload');
+  r = await call('edit', { method: 'POST', query: K, body: { action: 'draft', id: fresh.id, version: fresh.version, headline: 'Stale tab', start: 0 } });
+  assert.equal(r.code, 409); ok('stale tab cannot overwrite a newer draft');
+  const competing = await Promise.all(['yes','no'].map(decision => call('decide', { method: 'POST', query: K, body: { id: fresh.id, version, decision, headline: 'Saved draft', start: 90 } })));
+  assert.deepEqual(competing.map(x => x.code).sort(), [200,409]); ok('simultaneous decisions have one winner');
+  let production = (await call('next', { query: { ...K, view: 'production' } })).json;
+  let item = production.items.find(i => i.id === fresh.id);
+  if (!item) item = (await call('next', { query: { ...K, view: 'history' } })).json.items.find(i => i.id === fresh.id);
+  r = await call('edit', { method: 'POST', query: K, body: { action: 'undo', id: item.id, version: item.version } });
+  assert.equal(r.code, 200); ok('undo returns an unprocessed item to review');
+  version = r.json.version;
+  await call('decide', { method: 'POST', query: K, body: { id: item.id, version, decision: 'yes' } });
+  item = (await call('next', { query: { ...K, view: 'production' } })).json.items.find(i => i.id === item.id);
+  const claims = await Promise.all([1,2].map(() => call('worker', { method: 'POST', headers: W, body: { action: 'claim', id: item.id } })));
+  assert.deepEqual(claims.map(x => x.code).sort(), [200,409]); ok('only one worker can claim an item');
+  r = await call('edit', { method: 'POST', query: K, body: { action: 'undo', id: item.id, version: item.version } });
+  assert.equal(r.code, 409); ok('undo is blocked after production begins');
+  r = await call('worker', { method: 'POST', headers: W, body: { action: 'submit_review', id: yt.id, video_url: 'javascript:alert(1)' } });
+  assert.equal(r.code, 400); ok('unsafe final preview URL rejected');
+  r = await call('worker', { method: 'POST', headers: W, body: { action: 'submit_review', id: yt.id, video_url: 'https://media.example.com/reel.mp4', caption: 'Source: @creator' } });
+  assert.equal(r.code, 200);
+  item = (await call('next', { query: { ...K, view: 'final' } })).json.items[0];
+  assert.equal(item.caption, 'Source: @creator'); ok('finished video enters final review');
+  r = await call('edit', { method: 'POST', query: K, body: { action: 'request_changes', id: item.id, version: item.version, caption: item.caption, feedback: '' } });
+  assert.equal(r.code, 400); ok('revision requires useful feedback');
+  r = await call('edit', { method: 'POST', query: K, body: { action: 'request_changes', id: item.id, version: item.version, caption: item.caption, feedback: 'Please shorten the intro' } });
+  assert.equal(r.code, 200);
+  const revisions = (await call('worker', { headers: W, query: { action: 'revisions' } })).json.items;
+  assert.equal(revisions[0].client_feedback, 'Please shorten the intro'); ok('revision feedback reaches the worker');
+  await call('worker', { method: 'POST', headers: W, body: { action: 'claim', id: yt.id } });
+  await call('worker', { method: 'POST', headers: W, body: { action: 'submit_review', id: yt.id, video_url: 'https://media.example.com/revised.mp4', caption: 'Updated source credit' } });
+  item = (await call('next', { query: { ...K, view: 'final' } })).json.items[0];
+  r = await call('edit', { method: 'POST', query: K, body: { action: 'approve_final', id: item.id, version: item.version, caption: 'Client-approved caption' } });
+  assert.equal(r.code, 200);
+  item = (await call('next', { query: { ...K, view: 'history' } })).json.items.find(i => i.id === yt.id);
+  assert.equal(item.status, 'final_approved'); assert.equal(item.caption, 'Client-approved caption'); ok('final approval preserves edited caption without publishing');
+  r = await call('worker', { method: 'POST', headers: W, body: { action: 'publish', id: item.id } });
+  assert.equal(r.code, 409); ok('cannot publish before scheduling');
+  await call('worker', { method: 'POST', headers: W, body: { action: 'schedule', id: item.id } });
+  r = await call('worker', { method: 'POST', headers: W, body: { action: 'publish', id: item.id } });
+  assert.equal(r.code, 200);
+  assert.equal((await call('next', { query: { ...K, view: 'published' } })).json.total, 1); ok('operator-reported scheduling and publication appear in status views');
+  r = await call('edit', { method: 'POST', body: { action: 'undo', id: item.id, version: item.version } });
+  assert.equal(r.code, 403); ok('new edit endpoint requires private key');
+  await call('worker', { method: 'POST', headers: W, body: { action: 'mark', id: fresh.id, status: 'failed', note: 'PRIVATE OPERATOR ERROR' } });
+  production = (await call('next', { query: { ...K, view: 'production' } })).json;
+  assert.ok(!JSON.stringify(production).includes('PRIVATE OPERATOR ERROR')); ok('client views never expose operator error notes');
+  r = await call('next', { query: { ...K, view: 'nope' } }); assert.equal(r.code, 400); ok('invalid status view rejected');
+  r = await call('decide', { method: 'POST', query: K, body: { id: fresh.id, decision: 'yes', version: 'invalid' } });
+  assert.equal(r.code, 400); ok('malformed versions rejected before database access');
+  await call('worker', { method: 'POST', headers: W, body: { action: 'ingest', items: Array.from({length: 25}, (_, i) => ({ext_id: 'page-item-' + i, url: 'https://www.youtube.com/watch?v=page-item-' + i, title: 'Page item ' + i})) } });
+  const page1 = (await call('next', { query: K })).json;
+  const page2 = (await call('next', { query: { ...K, offset: '20' } })).json;
+  assert.equal(page1.items.length, 20); assert.equal(page1.hasMore, true);
+  assert.equal(page2.items.length, 5); assert.equal(page2.hasMore, false);
+  assert.equal(new Set([...page1.items, ...page2.items].map(i => i.id)).size, 25); ok('history/feed pagination does not drop or duplicate items');
   console.log(`\nall ${n} checks passed`);
+  await pg.close();
 })().catch((e) => { console.error('FAILED:', e.message); process.exit(1); });

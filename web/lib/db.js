@@ -29,9 +29,20 @@ const SCHEMA = `CREATE TABLE IF NOT EXISTS items (
   UNIQUE (source, ext_id)
 )`;
 
-// Create the table on first use of each cold start (cheap, idempotent).
+// Additive migrations preserve queues created before the review workflow.
+const MIGRATIONS = [
+  "ALTER TABLE items ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE items ADD COLUMN IF NOT EXISTS video_url TEXT",
+  "ALTER TABLE items ADD COLUMN IF NOT EXISTS caption TEXT",
+  "ALTER TABLE items ADD COLUMN IF NOT EXISTS client_feedback TEXT",
+  "ALTER TABLE items ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now()",
+];
+// One schema initialization per cold start; retry after a failed initialization.
 function ensure() {
-  if (!ready) ready = query(SCHEMA).catch((e) => { ready = null; throw e; });
+  if (!ready) ready = (async () => {
+    await query(SCHEMA);
+    for (const sql of MIGRATIONS) await query(sql);
+  })().catch((e) => { ready = null; throw e; });
   return ready;
 }
 

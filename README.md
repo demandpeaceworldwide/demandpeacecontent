@@ -11,3 +11,7 @@ Configure `DATABASE_URL` for Neon Postgres, `DP_KEY` for the approval link, and 
 See [web/README.md](web/README.md) for deployment and local test instructions.
 
 Video fetching and rendering run separately on the operator's Mac. This repository contains only the web app; internal project records, brand artwork, and worker files remain in the local workspace.
+
+## Review workflow
+
+The content desk supports saved idea drafts, guarded undo, production/history views, finished-video and caption review, revision requests, and operator-reported scheduling/publication. Review decisions never publish automatically. See `web/README.md` for setup, worker protocol, verification, and video-hosting requirements.

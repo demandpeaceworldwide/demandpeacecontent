@@ -1,126 +1,62 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Demand Peace Picks</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer"><title>Demand Peace · Content review</title>
 <style>
-  :root { --bg:#0b0b0b; --card:#161616; --fg:#f5f5f5; --mute:#9a9a9a; --line:#2a2a2a; --blue:#2F6BFF; --no:#3a3a3a; }
-  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#0b0b0b; } }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif; min-height:100dvh; }
-  .wrap { max-width:480px; margin:0 auto; padding:16px; }
-  header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
-  h1 { font-size:18px; margin:0; letter-spacing:.02em; text-transform:uppercase; }
-  .count { color:var(--mute); font-size:14px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; touch-action:pan-y; transition:transform .18s ease, opacity .18s ease; }
-  .card.out-yes { transform:translateX(120%) rotate(8deg); opacity:0; }
-  .card.out-no  { transform:translateX(-120%) rotate(-8deg); opacity:0; }
-  .player { position:relative; aspect-ratio:16/9; background:#000; }
-  .player iframe, .player img { position:absolute; inset:0; width:100%; height:100%; border:0; object-fit:cover; }
-  .body { padding:14px; }
-  .src { color:var(--mute); font-size:13px; margin-bottom:8px; }
-  label { display:block; font-size:12px; color:var(--mute); text-transform:uppercase; letter-spacing:.06em; margin:10px 0 4px; }
-  textarea, input[type=number], input[type=url] { width:100%; background:#0f0f0f; color:var(--fg); border:1px solid var(--line); border-radius:10px; padding:10px; font:inherit; }
-  textarea { min-height:64px; resize:vertical; text-transform:uppercase; font-weight:700; }
-  .row { display:flex; gap:12px; margin-top:14px; }
-  button { flex:1; border:0; border-radius:14px; padding:16px; font:700 16px inherit; font-family:inherit; color:#fff; cursor:pointer; }
-  .no { background:var(--no); } .yes { background:var(--blue); }
-  button:active { transform:scale(.98); }
-  .hint { color:var(--mute); font-size:13px; text-align:center; margin-top:10px; }
-  .empty { text-align:center; padding:48px 12px; color:var(--mute); }
-  .xnote { background:#1b2a4a; border-radius:10px; padding:10px; font-size:14px; margin-top:8px; }
-  details { margin-top:22px; border-top:1px solid var(--line); padding-top:12px; }
-  summary { color:var(--mute); cursor:pointer; }
-  .addrow { display:flex; gap:8px; margin-top:10px; } .addrow button { flex:0 0 auto; padding:10px 16px; background:var(--blue); }
-  .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#222; padding:10px 16px; border-radius:999px; font-size:14px; opacity:0; transition:opacity .2s; pointer-events:none; }
-  .toast.show { opacity:1; }
+:root{color-scheme:dark;--bg:#0b0b0b;--card:#161616;--fg:#f5f5f5;--muted:#aaa;--line:#333;--blue:#2f6bff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}main{max-width:640px;margin:auto;padding:24px 16px 48px}h1{font-size:25px;margin:0;letter-spacing:-.04em}h2{font-size:20px;margin:0 0 10px}p{margin:8px 0}.eyebrow{color:#8eadff;font-size:12px;letter-spacing:.15em;text-transform:uppercase}.muted,.help{color:var(--muted);font-size:14px}header{display:flex;align-items:center;justify-content:space-between;gap:12px}button,input,textarea{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:#252525;color:var(--fg);border-radius:10px;padding:12px 16px;min-height:44px}button:disabled{opacity:.5;cursor:wait}button.primary{background:var(--blue);border-color:var(--blue)}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #abc2ff;outline-offset:3px}a{color:#98b7ff}nav{display:flex;gap:8px;overflow:auto;padding:18px 0}nav button{white-space:nowrap;font-size:13px;padding:10px 12px}nav button[aria-pressed=true]{background:#20315c;border-color:#6f95ff}.card{border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}.body{padding:20px}.player{aspect-ratio:16/9;background:#000}.player iframe{width:100%;height:100%;border:0}video{display:block;width:100%;max-height:540px;background:#000}.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.row button{flex:1}label{display:block;font-size:14px;margin:16px 0 6px}input,textarea{width:100%;background:#101010;color:var(--fg);border:1px solid #454545;border-radius:8px;padding:12px}textarea{min-height:100px;resize:vertical}#headline{font-weight:650}#error{background:#3b1d23;color:#ffd8dd;border:1px solid #8b4655;padding:12px;border-radius:10px;margin:12px 0}.badge{display:inline-block;background:#252d40;color:#c5d5ff;font-size:12px;border-radius:6px;padding:4px 8px;margin-bottom:12px}.empty{padding:40px 20px;text-align:center;border:1px dashed var(--line);border-radius:16px}.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0}.notice{padding:12px;background:#202b43;border-radius:8px;font-size:14px}details{border-top:1px solid var(--line);margin-top:28px;padding-top:18px}summary{cursor:pointer}#notice{min-height:24px;font-size:14px;color:#b7c9ff}#saved{font-size:13px;color:var(--muted)}[hidden]{display:none!important}@media(prefers-reduced-motion:no-preference){button{transition:background .15s}}@media(max-width:380px){h1{font-size:22px}.body{padding:14px}}
 </style>
 </head>
-<body>
-<div class="wrap">
-  <header><h1>Demand Peace picks</h1><span class="count" id="count"></span></header>
-  <div id="stage"></div>
-  <details>
-    <summary>Add a link</summary>
-    <div class="addrow"><input type="url" id="link" placeholder="Paste a YouTube or X link"><button id="addbtn">Add</button></div>
-  </details>
-</div>
-<div class="toast" id="toast"></div>
-<script>
-const K = new URLSearchParams(location.search).get('k') || '';
-const api = (p, o = {}) => fetch(p + (p.includes('?') ? '&' : '?') + 'k=' + encodeURIComponent(K), { ...o, headers: { 'Content-Type': 'application/json' } }).then(r => r.json());
-let queue = [], cur = null;
-const $ = id => document.getElementById(id);
-const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-
-function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1800); }
-
-async function load() {
-  const d = await api('/api/next');
-  queue = d.items;
-  $('count').textContent = d.left + ' to review · ' + d.approved + ' approved';
-  show();
-}
-
-function embed(it, start) {
-  if (it.source !== 'youtube') return '';
-  return `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(it.ext_id)}?start=${start|0}&rel=0&playsinline=1" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
-}
-
-function show() {
-  const st = $('stage');
-  cur = queue[0];
-  if (!cur) { st.innerHTML = '<div class="empty">You\'re all caught up.<br>New picks show up here as they come in.</div>'; return; }
-  const isX = cur.source === 'x';
-  st.innerHTML = `
-    <div class="card" id="card">
-      <div class="player" id="player">${isX ? '' : embed(cur, 0)}</div>
-      <div class="body">
-        <div class="src">${esc(cur.channel || cur.source)} · <a style="color:var(--blue)" target="_blank" rel="noopener" href="${esc(cur.url)}">open original</a></div>
-        ${isX ? '<div class="xnote">X posts can’t be previewed or downloaded here. Approving this sends it to Tehron to source by hand.</div>' : ''}
-        <label for="hl">Headline on the video</label>
-        <textarea id="hl" maxlength="80">${esc(cur.headline || cur.title)}</textarea>
-        ${isX ? '' : '<label for="st">Start at (seconds)</label><input type="number" id="st" min="0" value="0">'}
-        <div class="row"><button class="no" id="no">✕ Skip</button><button class="yes" id="yes">✓ Post it</button></div>
-        <div class="hint">Swipe right to post, left to skip.</div>
-      </div>
-    </div>`;
-  $('yes').onclick = () => decide('yes');
-  $('no').onclick = () => decide('no');
-  const stEl = $('st');
-  if (stEl) stEl.onchange = () => { $('player').innerHTML = embed(cur, stEl.value); };
-  swipe($('card'));
-}
-
-function swipe(card) {
-  let x0 = null;
-  const body = card.querySelector('.body');
-  body.addEventListener('pointerdown', e => { if (e.target.closest('textarea,input,button,a')) return; x0 = e.clientX; });
-  window.addEventListener('pointermove', e => { if (x0 !== null) card.style.transform = `translateX(${e.clientX - x0}px) rotate(${(e.clientX - x0) / 30}deg)`; });
-  window.addEventListener('pointerup', e => {
-    if (x0 === null) return;
-    const dx = e.clientX - x0; x0 = null;
-    if (dx > 110) decide('yes'); else if (dx < -110) decide('no'); else card.style.transform = '';
-  });
-}
-
-async function decide(decision) {
-  if (!cur) return;
-  const card = $('card'), it = cur;
-  const payload = { id: it.id, decision, headline: $('hl').value, start: $('st') ? $('st').value : 0 };
-  card.classList.add('out-' + decision);
-  const r = await api('/api/decide', { method: 'POST', body: JSON.stringify(payload) });
-  if (decision === 'yes') toast(r.status === 'needs_manual' ? 'Sent to Tehron to source' : 'Approved. We’ll make the video.');
-  setTimeout(load, 200);
-}
-
-$('addbtn').onclick = async () => {
-  const url = $('link').value.trim(); if (!url) return;
-  const r = await api('/api/add', { method: 'POST', body: JSON.stringify({ url }) });
-  toast(r.error || ('Link ' + r.result)); if (!r.error) { $('link').value = ''; load(); }
-};
-load();
-</script>
-</body>
-</html>
+<body><main>
+<header><div><div class="eyebrow">Demand Peace</div><h1>Your content desk</h1></div><button id="refresh" type="button">Refresh</button></header>
+<p class="muted">Choose ideas you like. Review the finished post before it’s scheduled.</p>
+<nav aria-label="Content status" id="tabs"></nav>
+<div id="error" role="alert" hidden></div><div id="notice" role="status" aria-live="polite"></div>
+<section id="stage" aria-label="Content item"><div class="empty">Loading your content…</div></section>
+<div class="pager" id="pager" hidden><button id="prev">Previous</button><span id="position" class="muted"></span><button id="next">Next</button></div>
+<p id="updated" class="muted"></p>
+<details><summary>Add a content link</summary><p class="help">Send a YouTube video or X post into the review queue.</p><label for="link">Original content URL</label><input type="url" id="link" placeholder="https://…"><div class="row"><button id="add" class="primary">Add to review</button></div></details>
+</main><script>
+'use strict';
+const key=new URLSearchParams(location.search).get('k')||'';
+const $=id=>document.getElementById(id);
+const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const views={review:'To review',production:'In production',final:'Final review',scheduled:'Scheduled',published:'Published',history:'History'};
+const labels={new:'Idea to review',approved:'Waiting for production',needs_manual:'Waiting for sourcing',rendering:'In production',rendered:'Preparing final preview',failed:'Production needs attention',revision:'Changes requested',ready:'Ready for final review',final_approved:'Approved · ready to schedule',scheduled:'Scheduled',published:'Published',skipped:'Skipped'};
+const descriptions={approved:'Tehron will produce this idea. You can return it to review until production starts.',needs_manual:'Tehron will source this X post by hand.',rendering:'Your post is being produced.',rendered:'The video is rendered. Tehron still needs to attach its preview for final review.',failed:'Tehron needs to resolve a production issue. No action needed from you.',revision:'Your feedback has been sent to Tehron.',final_approved:'You approved the finished post. It is waiting to be scheduled.',scheduled:'Tehron has marked this post scheduled.',published:'Tehron has marked this post published.',skipped:'This idea was skipped. You can return it to the review queue.'};
+let view='review',offset=0,index=0,items=[],counts={},hasMore=false,total=0,cur=null,busy=false,dirty=false,timer=null,loading=false;
+async function api(path,options={}){let response;try{response=await fetch(path+(path.includes('?')?'&':'?')+'k='+encodeURIComponent(key),{...options,headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(15000)});}catch{throw new Error('Could not connect. Check your connection and try again. Your edits remain on this screen.');}let data;try{data=await response.json();}catch{throw new Error('The server could not complete this request. Try again.');}if(!response.ok)throw new Error(data.error||'Could not save. Try again.');return data;}
+const post=(path,payload)=>api(path,{method:'POST',body:JSON.stringify(payload)});
+function error(message){$('error').textContent=message||'';$('error').hidden=!message;}
+function notice(message){$('notice').textContent=message;}
+function lock(value){busy=value;document.querySelectorAll('button').forEach(b=>b.disabled=value);for(const id of ['headline','start','caption','feedback']){if($(id))$(id).disabled=value;}if(!value)updatePager();}
+function drawTabs(){ $('tabs').innerHTML=Object.entries(views).map(([id,title])=>`<button data-view="${id}" aria-pressed="${id===view}">${title} <span>${counts[id]||0}</span></button>`).join('');$('tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>navigate(()=>{view=b.dataset.view;offset=0;index=0;return load();}));}
+function time(seconds){return Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');}
+function seconds(value){if(!/^\d{1,4}:[0-5]\d$/.test(value.trim()))throw new Error('Use minutes:seconds, for example 1:30.');const [m,s]=value.split(':').map(Number);if(m*60+s>86400)throw new Error('Start time must be within 24 hours.');return m*60+s;}
+function safeUrl(value){try{const u=new URL(value);return u.protocol==='https:'?u.href:'';}catch{return '';}}
+function player(item,start){return item.source==='youtube'?`<div class="player"><iframe title="Original video preview" src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(item.ext_id)}?start=${start}&rel=0&playsinline=1" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`:'';}
+function updatePager(){ $('pager').hidden=total===0;$('position').textContent=total?`${offset+index+1} of ${total}`:'';$('prev').disabled=busy||(offset===0&&index===0);$('next').disabled=busy||(index>=items.length-1&&!hasMore);}
+function show(){clearTimeout(timer);dirty=false;cur=items[index];updatePager();const stage=$('stage');if(!cur){stage.innerHTML=`<div class="empty"><h2>${view==='review'?'You’re all caught up':'Nothing here yet'}</h2><p class="muted">${view==='review'?'Add a link or refresh when new picks arrive.':'Content will appear here as it moves through the review process.'}</p></div>`;return;}
+const original=safeUrl(cur.url),video=safeUrl(cur.video_url),isIdea=cur.status==='new',isFinal=cur.status==='ready';
+let html=`<article class="card">${isFinal&&video?`<video controls playsinline preload="metadata" src="${esc(video)}" aria-label="Finished Reel preview"></video>`:isIdea?player(cur,cur.start_sec||0):''}<div class="body"><span class="badge">${esc(labels[cur.status]||cur.status)}</span><p class="muted">${esc(cur.channel||cur.source)}${original?` · <a href="${esc(original)}" target="_blank" rel="noopener noreferrer">Open original</a>`:''}</p>`;
+if(isIdea){html+=`${cur.source==='x'?'<p class="notice">X links need manual sourcing. Approving sends the idea to Tehron.</p>':''}<label for="headline">Headline on the video</label><textarea id="headline" maxlength="80">${esc(cur.headline||cur.title)}</textarea>${cur.source==='youtube'?`<label for="start">Clip starts at</label><input id="start" type="text" inputmode="text" value="${time(cur.start_sec||0)}" placeholder="0:00"><p class="help">Minutes:seconds. Current production clips are 45 seconds.</p>`:''}<p id="saved" role="status">Draft saved</p><div class="row"><button id="skip">Skip idea</button><button id="approve" class="primary">Approve idea</button></div><p class="help">Approval starts production. It does not publish to Instagram.</p>`;}
+else if(isFinal){html+=`<h2>${esc(cur.headline||cur.title)}</h2><label for="caption">Post caption and source credit</label><textarea id="caption" maxlength="2200">${esc(cur.caption||'')}</textarea><label for="feedback">Feedback for Tehron</label><textarea id="feedback" maxlength="1000" placeholder="What would you like changed?">${esc(cur.client_feedback||'')}</textarea><div class="row"><button id="changes">Request changes</button><button id="final" class="primary">Approve final post</button></div><p class="help">Final approval makes this ready to schedule. It does not publish automatically.</p>`;}
+else{html+=`<h2>${esc(cur.headline||cur.title)}</h2><p class="muted">${esc(descriptions[cur.status]||'')}</p>${cur.client_feedback?`<p><strong>Your feedback:</strong> ${esc(cur.client_feedback)}</p>`:''}${video?`<p><a href="${esc(video)}" target="_blank" rel="noopener noreferrer">View finished video</a></p>`:''}${cur.caption?`<p style="white-space:pre-wrap">${esc(cur.caption)}</p>`:''}${['approved','needs_manual','skipped'].includes(cur.status)?'<div class="row"><button id="undo">Return to review</button></div>':''}`;}
+stage.innerHTML=html+'</div></article>';
+if(isIdea){$('headline').oninput=changed;if($('start')){$('start').oninput=changed;$('start').onchange=()=>{try{const iframe=stage.querySelector('iframe');if(iframe)iframe.src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(cur.ext_id)}?start=${seconds($('start').value)}&rel=0&playsinline=1`;}catch(e){error(e.message);}};}$('skip').onclick=()=>decision('no');$('approve').onclick=()=>decision('yes');}
+if(isFinal){$('changes').onclick=()=>finalDecision('request_changes');$('final').onclick=()=>finalDecision('approve_final');}
+if($('undo'))$('undo').onclick=()=>mutate('/api/edit',{action:'undo',id:cur.id,version:cur.version},'Returned to review.');}
+function changed(){dirty=true;error('');$('saved').textContent='Unsaved changes';clearTimeout(timer);timer=setTimeout(()=>saveDraft().catch(e=>error(e.message)),800);}
+async function saveDraft(){clearTimeout(timer);if(!dirty||!cur||cur.status!=='new')return;if(busy)throw new Error('Please wait for the current save to finish.');const payload={action:'draft',id:cur.id,version:cur.version,headline:$('headline').value,start:$('start')?seconds($('start').value):0};lock(true);$('saved').textContent='Saving…';try{const result=await post('/api/edit',payload);Object.assign(cur,{headline:payload.headline,start_sec:payload.start,version:result.version});dirty=false;$('saved').textContent='Draft saved';}catch(e){$('saved').textContent='Not saved — retry before leaving';throw e;}finally{lock(false);}}
+async function load(){if(loading)return;loading=true;lock(true);try{let data=await api('/api/next?view='+view+'&offset='+offset);if(offset>0&&offset>=data.total){offset=Math.max(0,Math.floor((data.total-1)/20)*20);index=0;data=await api('/api/next?view='+view+'&offset='+offset);}items=data.items;counts=data.counts;total=data.total;hasMore=data.hasMore;index=Math.min(index,Math.max(0,items.length-1));drawTabs();show();error('');$('updated').textContent='Last refreshed '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});}catch(e){error(e.message);}finally{loading=false;lock(false);}}
+async function navigate(fn){if(busy)return;try{await saveDraft();if(cur?.status==='ready'&&($('caption').value!==(cur.caption||'')||$('feedback').value!==(cur.client_feedback||''))&&!confirm('Leave this post without saving your final-review edits?'))return;await fn();}catch(e){error(e.message);}}
+async function mutate(path,payload,message){if(busy)return;lock(true);try{await post(path,payload);notice(message);dirty=false;lock(false);await load();}catch(e){error(e.message);lock(false);}}
+async function decision(choice){if(busy)return;try{await saveDraft();await mutate('/api/decide',{id:cur.id,version:cur.version,decision:choice,headline:$('headline').value,start:$('start')?seconds($('start').value):0},choice==='no'?'Idea skipped. Find it in History.':'Idea approved. Tehron will prepare the post.');}catch(e){error(e.message);}}
+async function finalDecision(action){await mutate('/api/edit',{action,id:cur.id,version:cur.version,caption:$('caption').value,feedback:$('feedback').value},action==='approve_final'?'Final post approved. Ready to schedule.':'Changes requested. Tehron will review your feedback.');}
+$('refresh').onclick=()=>navigate(load);
+$('prev').onclick=()=>navigate(()=>{if(index>0){index--;show();}else{offset=Math.max(0,offset-20);index=19;return load();}});
+$('next').onclick=()=>navigate(()=>{if(index<items.length-1){index++;show();}else{offset+=20;index=0;return load();}});
+$('add').onclick=async()=>{if(busy)return;try{await saveDraft();const url=$('link').value.trim();if(!url){error('Paste a YouTube or X link first.');return;}lock(true);const result=await post('/api/add',{url});$('link').value='';notice(result.result==='added'?'Link added to review.':'That link is already in your queue.');lock(false);await load();}catch(e){error(e.message);lock(false);}};
+window.addEventListener('beforeunload',e=>{if(dirty||busy||(cur?.status==='ready'&&($('caption').value!==(cur.caption||'')||$('feedback').value!==(cur.client_feedback||'')))){e.preventDefault();e.returnValue='';}});
+drawTabs();if(key)load();else{$('stage').innerHTML='<div class="empty">Open the private review link Tehron shared with you.</div>';error('This page needs your private access link.');}
+</script></body></html>
