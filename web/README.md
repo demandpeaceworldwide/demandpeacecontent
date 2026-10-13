@@ -71,3 +71,13 @@ python3 pipeline/submit_review.py --item <item-id> --video-url '<Drive-file-link
 Set `DP_API` and `DP_WORKER_KEY` through your existing local environment first. The helper uses the caption JSON generated alongside the rendered MP4. It does not perform the upload. The folder URL itself is not accepted as a final-video URL.
 
 43 API checks verify the workflow including Drive normalization, resource-key retention, unsafe/folder-link rejection, and review response metadata. Mobile Chrome verified the Drive iframe, fallback link, caption approval, and existing draft/undo/error flows using fixture URLs with external playback blocked. A real Drive video remains necessary to verify permissions and playback.
+
+## Review-only client launch
+
+The app defaults to review-only mode (`DP_REVIEW_ONLY=true`, also the default when unset). Noah sees To review, Selected, and Skipped; selecting an idea records a shortlist entry rather than a render request. Notes on ideas and the project direction form persist in Postgres with version checks. Worker production actions are blocked in this phase. `DP_REVIEW_ONLY=false` restores the production workflow later; launch shortlist entries must be intentionally returned to review and approved in production mode before rendering.
+
+For this client project, Vercel must use Root Directory `web` and Output Directory `public`. The production domain is `demandpeacecontent.vercel.app`. A successful deployment from the repository root can still serve a 404 because the app is nested inside `web`.
+
+Production requires `DATABASE_URL`, a private `DP_KEY`, and a separate `DP_WORKER_KEY`. The review link includes `?k=<DP_KEY>`; never commit its real value. No running Mac worker, Drive video uploads, or Instagram account linking is required for idea review.
+
+53 API checks cover both review-only mode and the future production workflow. Mobile Chrome verified saved direction/notes, keep/undo, private-link errors, and the absence of production tabs. Live database/phone verification must also pass before client handoff.

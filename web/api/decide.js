@@ -1,4 +1,5 @@
 const { query, ensure } = require('../lib/db');
+const { reviewOnly } = require('../lib/mode');
 const { userOk, json, body } = require('../lib/util');
 module.exports = async (req, res) => {
   if (!userOk(req)) return json(res, 403, { error: 'Invalid review link' });
@@ -11,10 +12,10 @@ module.exports = async (req, res) => {
   if (!Number.isSafeInteger(start) || start < 0 || start > 86400) return json(res, 400, { error: 'Start time must be between 0 and 24 hours' });
   await ensure();
   const rows = await query(`UPDATE items SET status=CASE WHEN $1='no' THEN 'skipped'
-    WHEN source='x' THEN 'needs_manual' ELSE 'approved' END,
+    WHEN $6 THEN 'selected' WHEN source='x' THEN 'needs_manual' ELSE 'approved' END,
     headline=COALESCE($2, headline), start_sec=$3, decided_at=now(), updated_at=now(), version=version+1
     WHERE id=$4 AND status='new' AND ($5::integer IS NULL OR version=$5) RETURNING status, version`,
-    [b.decision, String(b.headline || '').trim().slice(0, 80) || null, start, Number(b.id), b.version ?? null]);
+    [b.decision, String(b.headline || '').trim().slice(0, 80) || null, start, Number(b.id), b.version ?? null, reviewOnly()]);
   if (!rows.length) {
     const exists = await query('SELECT id FROM items WHERE id=$1', [Number(b.id)]);
     return json(res, exists.length ? 409 : 404, { error: exists.length ? 'This item changed. Refresh before deciding again.' : 'No such item' });

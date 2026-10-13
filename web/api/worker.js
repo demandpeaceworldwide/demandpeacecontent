@@ -3,6 +3,7 @@
 //   GET  ?action=approved                                                       -> items waiting to be rendered
 //   GET  ?action=manual                                                         -> X items Tehron must source by hand
 //   POST {action:'mark', id, status:'rendered'|'failed', note}                  -> report the result
+const { reviewOnly } = require('../lib/mode');
 const { query, ensure } = require('../lib/db');
 const { mediaLink } = require('../lib/media');
 const { workerOk, json, body, cleanTitle } = require('../lib/util');
@@ -13,6 +14,7 @@ module.exports = async (req, res) => {
 
   if (req.method === 'GET') {
     const action = req.query.action;
+    if (reviewOnly() && ['approved','manual','revisions'].includes(action)) return json(res, 200, { items: [] });
     if (action === 'approved') {
       return json(res, 200, { items: await query(
         "SELECT * FROM items WHERE status='approved' AND source='youtube' ORDER BY decided_at") });
@@ -29,6 +31,7 @@ module.exports = async (req, res) => {
 
   if (req.method !== 'POST') return json(res, 405, { error: 'GET or POST' });
   const b = body(req);
+  if (reviewOnly() && b.action !== 'ingest') return json(res, 409, { error: 'Production is paused while Noah reviews ideas' });
 
   if (b.action === 'ingest') {
     let added = 0;

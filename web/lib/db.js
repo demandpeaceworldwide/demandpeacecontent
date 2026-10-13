@@ -31,6 +31,9 @@ const SCHEMA = `CREATE TABLE IF NOT EXISTS items (
 
 // Additive migrations preserve queues created before the review workflow.
 const MIGRATIONS = [
+  "ALTER TABLE items ADD COLUMN IF NOT EXISTS direction_note TEXT",
+  `CREATE TABLE IF NOT EXISTS project_direction (id INTEGER PRIMARY KEY CHECK (id=1), topics TEXT NOT NULL DEFAULT '', avoid TEXT NOT NULL DEFAULT '', creators TEXT NOT NULL DEFAULT '', examples TEXT NOT NULL DEFAULT '', version INTEGER NOT NULL DEFAULT 0, updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`,
+  "INSERT INTO project_direction(id) VALUES (1) ON CONFLICT (id) DO NOTHING",
   "ALTER TABLE items ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0",
   "ALTER TABLE items ADD COLUMN IF NOT EXISTS video_url TEXT",
   "ALTER TABLE items ADD COLUMN IF NOT EXISTS caption TEXT",

@@ -1,4 +1,5 @@
 // Runs the API handlers against an in-memory Postgres (PGlite). No network, no Neon account needed.
+process.env.DP_REVIEW_ONLY = 'false';
 process.env.DP_KEY = 'test-user-key';
 process.env.DP_WORKER_KEY = 'test-worker-key';
 const assert = require('assert');
@@ -10,7 +11,7 @@ const assert = require('assert');
 
   const handlers = {
     next: require('../api/next'), decide: require('../api/decide'),
-    add: require('../api/add'), worker: require('../api/worker'), edit: require('../api/edit'),
+    add: require('../api/add'), worker: require('../api/worker'), edit: require('../api/edit'), direction: require('../api/direction'),
   };
 
   async function call(name, { method = 'GET', query = {}, body, headers = {} } = {}) {
@@ -166,6 +167,38 @@ const assert = require('assert');
   assert.equal(r.code, 200);
   const driveItem = (await call('next', { query: { ...K, view: 'final' } })).json.items.find(i => i.id === rendered.id);
   assert.equal(driveItem.video_provider, 'drive'); assert.equal(driveItem.video_preview_url, drive.preview); ok('Drive video reaches final review with embed and fallback metadata');
+  process.env.DP_REVIEW_ONLY = 'true';
+  let review = (await call('next', { query: K })).json;
+  assert.equal(review.reviewOnly, true); ok('review-only launch mode is explicit');
+  const pick = review.items[0];
+  r = await call('edit', { method: 'POST', query: K, body: { action: 'draft', id: pick.id, version: pick.version, headline: pick.headline, start: 0, direction_note: 'Prefer interviews with clear context' } });
+  assert.equal(r.code, 200);
+  r = await call('decide', { method: 'POST', query: K, body: { id: pick.id, version: r.json.version, decision: 'yes' } });
+  assert.equal(r.json.status, 'selected');
+  let selected = (await call('next', { query: { ...K, view: 'selected' } })).json.items.find(i => i.id === pick.id);
+  assert.equal(selected.direction_note, 'Prefer interviews with clear context'); ok('keep saves the idea and its direction without starting production');
+  r = await call('edit', { method: 'POST', query: K, body: { action: 'draft', id: selected.id, version: selected.version, headline: selected.headline, start: 0, direction_note: 'Updated shortlist note' } });
+  assert.equal(r.code, 200); ok('selected idea notes can still be edited');
+  r = await call('worker', { method: 'POST', headers: W, body: { action: 'claim', id: pick.id } });
+  assert.equal(r.code, 409);
+  assert.deepEqual((await call('worker', { headers: W, query: { action: 'approved' } })).json.items, []); ok('review-only mode blocks production workers');
+  r = await call('next', { query: { ...K, view: 'final' } }); assert.equal(r.code, 400); ok('production views unavailable during direction gathering');
+  r = await call('edit', { method: 'POST', query: K, body: { action: 'undo', id: pick.id, version: selected.version+1 } });
+  assert.equal(r.code, 200);
+  r = await call('decide', { method: 'POST', query: K, body: { id: pick.id, version: r.json.version, decision: 'no' } });
+  assert.equal(r.json.status, 'skipped');
+  const skipped = (await call('next', { query: { ...K, view: 'skipped' } })).json.items.find(i => i.id === pick.id);
+  assert.equal(skipped.direction_note, 'Updated shortlist note'); ok('undo and skip preserve direction notes');
+  const direction = (await call('direction', { query: K })).json.direction;
+  r = await call('direction', { method: 'POST', query: K, body: { version: direction.version, topics: 'Peace and human stories', avoid: 'Graphic footage', creators: '@trusted', examples: 'https://youtu.be/example' } });
+  assert.equal(r.code, 200);
+  const loadedDirection = (await call('direction', { query: K })).json.direction;
+  assert.equal(loadedDirection.topics, 'Peace and human stories'); assert.equal(loadedDirection.avoid, 'Graphic footage'); ok('project direction persists across reloads');
+  r = await call('direction', { method: 'POST', query: K, body: { version: direction.version, topics: 'Stale tab' } });
+  assert.equal(r.code, 409); ok('stale direction edits cannot overwrite client preferences');
+  assert.equal((await call('direction', {})).code, 403); ok('project preferences require private link');
+  r = await call('direction', { method: 'POST', query: K, body: { version: loadedDirection.version, topics: 'x'.repeat(2001) } });
+  assert.equal(r.code, 400); ok('oversized direction fields rejected');
   console.log(`\nall ${n} checks passed`);
   await pg.close();
 })().catch((e) => { console.error('FAILED:', e.message); process.exit(1); });

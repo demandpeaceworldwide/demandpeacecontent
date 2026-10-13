@@ -8,14 +8,14 @@ module.exports = async (req, res) => {
   await ensure();
   let rows;
   if (b.action === 'draft') {
-    const start = Number(b.start || 0), headline = String(b.headline || '').trim();
-    if (!Number.isSafeInteger(start) || start < 0 || start > 86400 || headline.length > 80) return json(res, 400, { error: 'Check headline and start time' });
-    rows = await query(`UPDATE items SET headline=$1, start_sec=$2, updated_at=now(), version=version+1
-      WHERE id=$3 AND status='new' AND version=$4 RETURNING version`, [headline, start, id, b.version]);
+    const start = Number(b.start || 0), headline = String(b.headline || '').trim(), note = String(b.direction_note || '').trim();
+    if (!Number.isSafeInteger(start) || start < 0 || start > 86400 || headline.length > 80 || note.length > 1000) return json(res, 400, { error: 'Check headline and start time' });
+    rows = await query(`UPDATE items SET headline=$1, start_sec=$2, direction_note=$5, updated_at=now(), version=version+1
+      WHERE id=$3 AND status IN ('new','selected','skipped') AND version=$4 RETURNING version`, [headline, start, id, b.version, note]);
   } else if (b.action === 'undo') {
     // Atomic guard: once a worker claims an item, it cannot be withdrawn.
     rows = await query(`UPDATE items SET status='new', decided_at=NULL, updated_at=now(), version=version+1
-      WHERE id=$1 AND status IN ('approved','needs_manual','skipped') AND version=$2 RETURNING version`, [id, b.version]);
+      WHERE id=$1 AND status IN ('approved','needs_manual','selected','skipped') AND version=$2 RETURNING version`, [id, b.version]);
   } else if (b.action === 'approve_final' || b.action === 'request_changes') {
     const feedback = String(b.feedback || '').trim().slice(0, 1000);
     if (b.action === 'request_changes' && !feedback) return json(res, 400, { error: 'Tell us what to change' });
