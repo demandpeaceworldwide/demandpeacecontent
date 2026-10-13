@@ -4,6 +4,7 @@
 //   GET  ?action=manual                                                         -> X items Tehron must source by hand
 //   POST {action:'mark', id, status:'rendered'|'failed', note}                  -> report the result
 const { query, ensure } = require('../lib/db');
+const { mediaLink } = require('../lib/media');
 const { workerOk, json, body, cleanTitle } = require('../lib/util');
 
 module.exports = async (req, res) => {
@@ -55,12 +56,11 @@ module.exports = async (req, res) => {
         WHERE id=$3 AND status='rendering' RETURNING id`, [b.status, String(b.note || '').slice(0, 300) || null, id]);
     } else if (b.action === 'submit_review') {
       let video;
-      try { video = new URL(b.video_url); } catch { return json(res, 400, { error: 'Provide a hosted HTTPS video URL' }); }
-      if (video.protocol !== 'https:' || video.username || video.password) return json(res, 400, { error: 'Provide a hosted HTTPS video URL' });
+      try { video = mediaLink(b.video_url); } catch (e) { return json(res, 400, { error: e.message }); }
       const caption = String(b.caption || '').trim();
       if (caption.length > 2200) return json(res, 400, { error: 'Caption is too long' });
       rows = await query(`UPDATE items SET status='ready', video_url=$1, caption=$2, note=NULL,
-        version=version+1, updated_at=now() WHERE id=$3 AND status IN ('rendered','rendering') RETURNING id`, [video.href, caption, id]);
+        version=version+1, updated_at=now() WHERE id=$3 AND status IN ('rendered','rendering') RETURNING id`, [video.url, caption, id]);
     } else {
       rows = await query(`UPDATE items SET status=$1, version=version+1, updated_at=now()
         WHERE id=$2 AND status=$3 RETURNING id`, [b.action === 'schedule' ? 'scheduled' : 'published', id, b.action === 'schedule' ? 'final_approved' : 'scheduled']);

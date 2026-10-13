@@ -9,13 +9,13 @@ api/decide.js       POST approve / skip, edit headline/start (needs ?k=)
 api/add.js          POST add a YouTube or X link             (needs ?k=)
 api/worker.js       worker endpoints for the Mac scripts     (needs header x-worker-key)
 lib/                db (Neon), helpers
-test/test.js        37 checks against in-memory Postgres:  npm test
+test/test.js        43 checks against in-memory Postgres:  npm test
 test/devserver.js   local stand-in for Vercel, no accounts:  node test/devserver.js
 ```
 
 ## Tested (2026-10-11)
 
-- `npm test`: all 37 checks pass (auth, ingest, idempotence, approve/skip, X never downloads, worker flow).
+- `npm test`: all 43 checks pass (auth, ingest, idempotence, approve/skip, X never downloads, worker flow).
 - Local dev server + the Python worker end to end: `fetch.py` ingested 8 items, the page API served them, an approval reached `produce.py`.
 - **Not tested:** a real Vercel deploy and a real Neon database (no accounts yet), and the YouTube oEmbed title lookup in `add.js` (network).
 
@@ -50,8 +50,24 @@ The hosting database adds columns automatically on first use, retaining existing
 
 ### Verification
 
-37 API/database checks cover draft persistence, concurrent decisions, worker claims, guarded undo, revisions, final approval, status transitions, and authorization. A mobile-width Chrome check verified draft persistence, failed-save recovery, approval/undo, final caption approval, invalid-link handling, and lack of horizontal overflow or uncaught script errors.
+43 API/database checks cover draft persistence, concurrent decisions, worker claims, guarded undo, revisions, final approval, status transitions, and authorization. A mobile-width Chrome check verified draft persistence, failed-save recovery, approval/undo, final caption approval, invalid-link handling, and lack of horizontal overflow or uncaught script errors.
 
 ### Current limits
 
 Video uploads/storage are not provisioned by this app. Use an appropriately protected video host and a URL usable by Noah's browser; do not attach confidential media using unrestricted public URLs. The app does not verify upload permissions or video playback availability. Draft autosave applies to idea headlines and clip starts; final caption/feedback edits save when Noah submits approval or requests changes. Moving away from edited final-review fields asks before discarding them. Worker claiming prevents duplicate renders, but interrupted jobs remain in production until the operator marks them failed. Clips are still a fixed 45 seconds; subtitles and the blue headline accent remain separate production tasks.
+
+## Google Drive final videos
+
+Use a video **file** link, not a folder link. The app accepts `https://drive.google.com/file/d/<file-id>/view` and legacy `open?id=`/`uc?id=` links, retains resource keys, and displays Drive's preview player with an always-visible Open video in Drive link. Direct HTTPS MP4 URLs continue to use the native video player.
+
+Upload the finished MP4 to the client folder and keep its sharing restricted to the intended reviewers. Noah must sign into a Google account with file access. Embedded playback can depend on browser sign-in/cookie settings and Drive video processing; opening in Drive is the fallback. The app does not upload files, change permissions, or bypass Google authentication. Do not put Google credentials in the app.
+
+After claiming/rendering, POST `submit_review` through the worker API using the copied Drive file URL and caption. In the local full workspace, the helper is:
+
+```bash
+python3 pipeline/submit_review.py --item <item-id> --video-url '<Drive-file-link>' --caption-file '<caption-json-path>'
+```
+
+Set `DP_API` and `DP_WORKER_KEY` through your existing local environment first. The helper uses the caption JSON generated alongside the rendered MP4. It does not perform the upload. The folder URL itself is not accepted as a final-video URL.
+
+43 API checks verify the workflow including Drive normalization, resource-key retention, unsafe/folder-link rejection, and review response metadata. Mobile Chrome verified the Drive iframe, fallback link, caption approval, and existing draft/undo/error flows using fixture URLs with external playback blocked. A real Drive video remains necessary to verify permissions and playback.
