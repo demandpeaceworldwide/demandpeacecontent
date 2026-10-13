@@ -1,0 +1,18 @@
+{
+  "name": "demandpeace-picks",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Noah's swipe page for approving Demand Peace content picks",
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.2.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8"
+  }
+}

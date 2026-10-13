@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demand Peace Picks</title>
+<style>
+  :root { --bg:#0b0b0b; --card:#161616; --fg:#f5f5f5; --mute:#9a9a9a; --line:#2a2a2a; --blue:#2F6BFF; --no:#3a3a3a; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#0b0b0b; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif; min-height:100dvh; }
+  .wrap { max-width:480px; margin:0 auto; padding:16px; }
+  header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
+  h1 { font-size:18px; margin:0; letter-spacing:.02em; text-transform:uppercase; }
+  .count { color:var(--mute); font-size:14px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; touch-action:pan-y; transition:transform .18s ease, opacity .18s ease; }
+  .card.out-yes { transform:translateX(120%) rotate(8deg); opacity:0; }
+  .card.out-no  { transform:translateX(-120%) rotate(-8deg); opacity:0; }
+  .player { position:relative; aspect-ratio:16/9; background:#000; }
+  .player iframe, .player img { position:absolute; inset:0; width:100%; height:100%; border:0; object-fit:cover; }
+  .body { padding:14px; }
+  .src { color:var(--mute); font-size:13px; margin-bottom:8px; }
+  label { display:block; font-size:12px; color:var(--mute); text-transform:uppercase; letter-spacing:.06em; margin:10px 0 4px; }
+  textarea, input[type=number], input[type=url] { width:100%; background:#0f0f0f; color:var(--fg); border:1px solid var(--line); border-radius:10px; padding:10px; font:inherit; }
+  textarea { min-height:64px; resize:vertical; text-transform:uppercase; font-weight:700; }
+  .row { display:flex; gap:12px; margin-top:14px; }
+  button { flex:1; border:0; border-radius:14px; padding:16px; font:700 16px inherit; font-family:inherit; color:#fff; cursor:pointer; }
+  .no { background:var(--no); } .yes { background:var(--blue); }
+  button:active { transform:scale(.98); }
+  .hint { color:var(--mute); font-size:13px; text-align:center; margin-top:10px; }
+  .empty { text-align:center; padding:48px 12px; color:var(--mute); }
+  .xnote { background:#1b2a4a; border-radius:10px; padding:10px; font-size:14px; margin-top:8px; }
+  details { margin-top:22px; border-top:1px solid var(--line); padding-top:12px; }
+  summary { color:var(--mute); cursor:pointer; }
+  .addrow { display:flex; gap:8px; margin-top:10px; } .addrow button { flex:0 0 auto; padding:10px 16px; background:var(--blue); }
+  .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#222; padding:10px 16px; border-radius:999px; font-size:14px; opacity:0; transition:opacity .2s; pointer-events:none; }
+  .toast.show { opacity:1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>Demand Peace picks</h1><span class="count" id="count"></span></header>
+  <div id="stage"></div>
+  <details>
+    <summary>Add a link</summary>
+    <div class="addrow"><input type="url" id="link" placeholder="Paste a YouTube or X link"><button id="addbtn">Add</button></div>
+  </details>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const K = new URLSearchParams(location.search).get('k') || '';
+const api = (p, o = {}) => fetch(p + (p.includes('?') ? '&' : '?') + 'k=' + encodeURIComponent(K), { ...o, headers: { 'Content-Type': 'application/json' } }).then(r => r.json());
+let queue = [], cur = null;
+const $ = id => document.getElementById(id);
+const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1800); }
+
+async function load() {
+  const d = await api('/api/next');
+  queue = d.items;
+  $('count').textContent = d.left + ' to review · ' + d.approved + ' approved';
+  show();
+}
+
+function embed(it, start) {
+  if (it.source !== 'youtube') return '';
+  return `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(it.ext_id)}?start=${start|0}&rel=0&playsinline=1" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+}
+
+function show() {
+  const st = $('stage');
+  cur = queue[0];
+  if (!cur) { st.innerHTML = '<div class="empty">You\'re all caught up.<br>New picks show up here as they come in.</div>'; return; }
+  const isX = cur.source === 'x';
+  st.innerHTML = `
+    <div class="card" id="card">
+      <div class="player" id="player">${isX ? '' : embed(cur, 0)}</div>
+      <div class="body">
+        <div class="src">${esc(cur.channel || cur.source)} · <a style="color:var(--blue)" target="_blank" rel="noopener" href="${esc(cur.url)}">open original</a></div>
+        ${isX ? '<div class="xnote">X posts can’t be previewed or downloaded here. Approving this sends it to Tehron to source by hand.</div>' : ''}
+        <label for="hl">Headline on the video</label>
+        <textarea id="hl" maxlength="80">${esc(cur.headline || cur.title)}</textarea>
+        ${isX ? '' : '<label for="st">Start at (seconds)</label><input type="number" id="st" min="0" value="0">'}
+        <div class="row"><button class="no" id="no">✕ Skip</button><button class="yes" id="yes">✓ Post it</button></div>
+        <div class="hint">Swipe right to post, left to skip.</div>
+      </div>
+    </div>`;
+  $('yes').onclick = () => decide('yes');
+  $('no').onclick = () => decide('no');
+  const stEl = $('st');
+  if (stEl) stEl.onchange = () => { $('player').innerHTML = embed(cur, stEl.value); };
+  swipe($('card'));
+}
+
+function swipe(card) {
+  let x0 = null;
+  const body = card.querySelector('.body');
+  body.addEventListener('pointerdown', e => { if (e.target.closest('textarea,input,button,a')) return; x0 = e.clientX; });
+  window.addEventListener('pointermove', e => { if (x0 !== null) card.style.transform = `translateX(${e.clientX - x0}px) rotate(${(e.clientX - x0) / 30}deg)`; });
+  window.addEventListener('pointerup', e => {
+    if (x0 === null) return;
+    const dx = e.clientX - x0; x0 = null;
+    if (dx > 110) decide('yes'); else if (dx < -110) decide('no'); else card.style.transform = '';
+  });
+}
+
+async function decide(decision) {
+  if (!cur) return;
+  const card = $('card'), it = cur;
+  const payload = { id: it.id, decision, headline: $('hl').value, start: $('st') ? $('st').value : 0 };
+  card.classList.add('out-' + decision);
+  const r = await api('/api/decide', { method: 'POST', body: JSON.stringify(payload) });
+  if (decision === 'yes') toast(r.status === 'needs_manual' ? 'Sent to Tehron to source' : 'Approved. We’ll make the video.');
+  setTimeout(load, 200);
+}
+
+$('addbtn').onclick = async () => {
+  const url = $('link').value.trim(); if (!url) return;
+  const r = await api('/api/add', { method: 'POST', body: JSON.stringify({ url }) });
+  toast(r.error || ('Link ' + r.result)); if (!r.error) { $('link').value = ''; load(); }
+};
+load();
+</script>
+</body>
+</html>
